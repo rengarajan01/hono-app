@@ -1,4 +1,4 @@
-import type { User } from './types.js'
+import type { User } from '../types/index.js'
 
 const s = { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true }
 

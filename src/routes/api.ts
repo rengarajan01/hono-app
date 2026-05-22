@@ -25,10 +25,10 @@ apiRoutes.get('/token', async (c) => {
   return c.json({ accessToken: tokenSet.accessToken })
 })
 
-// ?connection=github — user must have logged in with that social connection
 apiRoutes.get('/token/connection', async (c) => {
   const connection = c.req.query('connection')
   if (!connection) return c.json({ error: 'connection query param is required' }, 400)
+  if (!/^[a-zA-Z0-9_-]+$/.test(connection)) return c.json({ error: 'Invalid connection name' }, 400)
   const tokenSet = await getAccessTokenForConnection(c, { connection })
   return c.json({ accessToken: tokenSet.accessToken })
 })
@@ -36,7 +36,7 @@ apiRoutes.get('/token/connection', async (c) => {
 apiRoutes.get('/claims/:claim', (c) => {
   const user = getUser(c) as Record<string, unknown>
   const claim = c.req.param('claim')
-  const value = user[claim]
-  if (value === undefined) return c.json({ error: `Claim '${claim}' not found` }, 404)
-  return c.json({ claim, value })
+  if (!/^[a-zA-Z0-9_:]+$/.test(claim)) return c.json({ error: 'Invalid claim name' }, 400)
+  if (!Object.hasOwn(user, claim)) return c.json({ error: 'Claim not found' }, 404)
+  return c.json({ claim, value: user[claim] })
 })
