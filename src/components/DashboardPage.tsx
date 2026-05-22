@@ -10,9 +10,9 @@ function formatDate(epochSeconds?: number) {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="card" style={{ padding: '1rem 1.25rem' }}>
-      <p style={{ fontSize: '0.78rem', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.3rem' }}>{label}</p>
-      <p style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1a1a1a', margin: 0 }}>{value}</p>
+    <div className="stat-card">
+      <p className="stat-label">{label}</p>
+      <p className="stat-value">{value}</p>
     </div>
   )
 }
@@ -25,7 +25,15 @@ export function DashboardPage({ user, session }: DashboardPageProps) {
     <>
       <Nav user={user} />
       <main>
-        <h1>Session Dashboard</h1>
+        <div className="page-header">
+          <h1>Session Dashboard</h1>
+          <div className="actions">
+            <a href="/profile" className="btn btn-secondary">Profile</a>
+            <a href="/api/session" className="btn btn-secondary">Raw JSON</a>
+            <a href="/" className="btn btn-secondary">Home</a>
+            <a href="/auth/logout" className="btn btn-danger">Logout</a>
+          </div>
+        </div>
 
         <div className="grid">
           <StatCard label="Subject (sub)" value={user.sub} />
@@ -60,13 +68,6 @@ export function DashboardPage({ user, session }: DashboardPageProps) {
 
         <h2>Full Session (JSON)</h2>
         <pre>{JSON.stringify(session, null, 2)}</pre>
-
-        <div className="actions">
-          <a href="/profile" className="btn btn-secondary">Profile</a>
-          <a href="/api/session" className="btn btn-secondary">Raw JSON (/api/session)</a>
-          <a href="/" className="btn btn-secondary">Home</a>
-          <a href="/auth/logout" className="btn btn-danger">Logout</a>
-        </div>
       </main>
     </>
   )

@@ -3,7 +3,6 @@ import type { User } from './types.js'
 
 type ProfilePageProps = { user: User }
 
-// Claims to highlight at the top vs show in the full table
 const HIGHLIGHT_CLAIMS = ['sub', 'name', 'email', 'picture', 'email_verified', 'nickname', 'given_name', 'family_name']
 
 export function ProfilePage({ user }: ProfilePageProps) {
@@ -14,11 +13,19 @@ export function ProfilePage({ user }: ProfilePageProps) {
     <>
       <Nav user={user} />
       <main>
-        <div className="user-row">
-          {user.picture && <img src={user.picture} alt="avatar" className="avatar" style={{ width: 64, height: 64 }} />}
-          <div className="user-info">
-            <h1>{user.name ?? user.nickname ?? user.email ?? user.sub}</h1>
-            {user.email && <p>{user.email}{user.email_verified ? ' ✓' : ' (unverified)'}</p>}
+        <div className="page-header">
+          <div className="user-row" style={{ marginBottom: 0 }}>
+            {user.picture && <img src={user.picture} alt="avatar" className="avatar-lg" />}
+            <div className="user-info">
+              <h1>{user.name ?? user.nickname ?? user.email ?? user.sub}</h1>
+              {user.email && <p>{user.email}{user.email_verified ? ' ✓' : ' (unverified)'}</p>}
+            </div>
+          </div>
+          <div className="actions">
+            <a href="/dashboard" className="btn btn-secondary">Dashboard</a>
+            <a href="/api/me" className="btn btn-secondary">Raw JSON</a>
+            <a href="/" className="btn btn-secondary">Home</a>
+            <a href="/auth/logout" className="btn btn-danger">Logout</a>
           </div>
         </div>
 
@@ -43,13 +50,6 @@ export function ProfilePage({ user }: ProfilePageProps) {
               ))}
             </tbody>
           </table>
-        </div>
-
-        <div className="actions">
-          <a href="/dashboard" className="btn btn-secondary">Session Dashboard</a>
-          <a href="/api/me" className="btn btn-secondary">Raw JSON (/api/me)</a>
-          <a href="/" className="btn btn-secondary">Home</a>
-          <a href="/auth/logout" className="btn btn-danger">Logout</a>
         </div>
       </main>
     </>
