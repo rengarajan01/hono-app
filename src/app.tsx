@@ -23,10 +23,17 @@ app.use('*', reactRenderer(({ children, title }) => (
   <Layout title={title}>{children}</Layout>
 )))
 
-// auth0() initialises the OIDC client and session on every request.
-// customRoutes disables auto-mounting of /auth/* so routes/auth.ts owns them.
-// authRequired:false lets us apply requiresAuth() selectively per route.
-// response_mode:'query' is required for HTTP origins (localhost).
+// Derive APP_BASE_URL from the incoming request when not explicitly configured.
+// This means local dev and CF Workers deployments work without manual env var setup.
+app.use('*', (c, next) => {
+  const env = c.env as Record<string, string>
+  if (!env['APP_BASE_URL']) {
+    const { protocol, host } = new URL(c.req.url)
+    env['APP_BASE_URL'] = `${protocol}//${host}`
+  }
+  return next()
+})
+
 app.use('*', auth0({
   authRequired: false,
   idpLogout: true,

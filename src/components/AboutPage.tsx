@@ -3,81 +3,65 @@ import type { User } from './types.js'
 
 type AboutPageProps = { user?: User }
 
+type Feature = { export: string; description: string; link?: string }
+
+const FEATURES: Feature[] = [
+  { export: 'auth0()',                          description: 'Main middleware — initialises OIDC client, populates c.var.auth0' },
+  { export: 'requiresAuth()',                   description: 'Redirects unauthenticated browsers to login',                         link: '/profile' },
+  { export: 'requiresAuth("error")',            description: 'Returns HTTP 401 JSON for unauthenticated API requests',              link: '/api/me' },
+  { export: 'handleLogin()',                    description: 'Starts interactive OIDC login flow',                                  link: '/auth/login' },
+  { export: 'handleCallback()',                 description: 'Completes OIDC code exchange, writes session cookie (auto-mounted)' },
+  { export: 'handleLogout()',                   description: 'Clears session and redirects to Auth0 logout (auto-mounted)' },
+  { export: 'handleBackchannelLogout()',        description: 'POST endpoint for IdP-initiated logout (auto-mounted)' },
+  { export: 'getUser(c)',                       description: 'Synchronous — user claims from session, throws if unauthenticated',   link: '/api/me' },
+  { export: 'getSession(c)',                    description: 'Async — full session with token metadata, or null',                   link: '/api/session' },
+  { export: 'getAccessToken(c)',               description: 'Async — access token, auto-refreshed if expired',                    link: '/api/token' },
+  { export: 'getAccessTokenForConnection(c, …)', description: 'Async — token scoped to a federated social connection',             link: '/explorer' },
+  { export: 'Auth0Error',                       description: 'Typed error class with .code and .description' },
+]
+
 export function AboutPage({ user }: AboutPageProps) {
   return (
     <>
       <Nav user={user} />
       <main>
-        <div className="page-header">
-          <h1>About</h1>
-          <div className="actions">
-            <a href="/" className="btn btn-secondary">Home</a>
-            {user ? (
-              <>
-                <a href="/profile" className="btn btn-secondary">Profile</a>
-                <a href="/dashboard" className="btn btn-secondary">Dashboard</a>
-                <a href="/auth/logout" className="btn btn-danger">Logout</a>
-              </>
-            ) : (
-              <a href="/auth/login" className="btn btn-primary">Login</a>
-            )}
+        <div className="page-banner">
+          <div>
+            <h1>About</h1>
+            <p className="banner-sub">
+              Demo for <strong>@auth0/auth0-hono</strong> — OIDC middleware for{' '}
+              <a href="https://hono.dev" target="_blank" rel="noreferrer">Hono</a>,
+              deployed on <strong>Cloudflare Workers</strong> with server-side React. No client JS.
+            </p>
           </div>
         </div>
 
-        <div className="card">
-          <p>
-            This is a demo application showcasing the <strong>@auth0/auth0-hono</strong> SDK —
-            a lightweight OIDC middleware for the <a href="https://hono.dev" target="_blank" rel="noreferrer">Hono</a> web framework,
-            deployed on <strong>Cloudflare Workers</strong> with server-side React rendering via <strong>@hono/react-renderer</strong>.
-          </p>
-          <p style={{ marginBottom: 0 }}>
-            No client-side JavaScript — every page is rendered server-side, including auth state.
-          </p>
-        </div>
-
-        <h2>SDK Features Used</h2>
-        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <h2>SDK Features</h2>
+        <div className="card card-table">
           <table>
-            <thead><tr><th>Feature</th><th>Description</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Export</th>
+                <th>Description</th>
+                <th className="col-try">Try it</th>
+              </tr>
+            </thead>
             <tbody>
-              {[
-                ['auth0()', 'Main middleware — initialises OIDC client, populates c.var.auth0 on every request'],
-                ['requiresAuth()', 'Redirects unauthenticated users to login (used on /profile, /dashboard)'],
-                ['requiresAuth("error")', 'Returns HTTP 401 for unauthenticated requests (used on all /api/* routes)'],
-                ['handleLogin()', 'Starts interactive OIDC login flow'],
-                ['handleLogin({ prompt: "login" })', 'Forces re-authentication even with an active session'],
-                ['handleLogin({ prompt: "consent" })', 'Re-shows the consent screen'],
-                ['handleLogin({ redirectAfterLogin })', 'Redirects to a specific page after login'],
-                ['handleCallback()', 'Completes OIDC code exchange and writes session cookie (auto-mounted by SDK)'],
-                ['handleLogout()', 'Clears local session and redirects to Auth0 logout endpoint (auto-mounted by SDK)'],
-                ['handleBackchannelLogout()', 'POST endpoint for IdP-initiated backchannel logout (auto-mounted by SDK)'],
-                ['attemptSilentLogin()', 'Tries prompt=none login transparently (used on home page)'],
-                ['cancelSilentLogin()', 'Prevents silent login loop on the login route itself'],
-                ['getUser(c)', 'Synchronously returns user claims from c.var.auth0 (throws if unauthenticated)'],
-                ['getSession(c)', 'Async — returns full session object including token metadata, or null'],
-                ['getAccessToken(c)', 'Async — returns access token, refreshing silently if expired'],
-                ['getAccessTokenForConnection(c, opts)', 'Async — returns token scoped to a federated social connection'],
-                ['Auth0Error', 'Typed error class with .code and .description for OAuth2-compliant error responses'],
-              ].map(([feature, desc]) => (
-                <tr key={feature}>
-                  <td><code>{feature}</code></td>
-                  <td style={{ color: '#64748b' }}>{desc}</td>
+              {FEATURES.map((f) => (
+                <tr key={f.export}>
+                  <td><code>{f.export}</code></td>
+                  <td className="td-muted">{f.description}</td>
+                  <td>
+                    {f.link
+                      ? <a href={f.link} className="btn btn-secondary btn-sm">Try →</a>
+                      : <span className="text-muted">—</span>
+                    }
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-
-        {!user && (
-          <div className="card">
-            <p style={{ marginBottom: '1rem' }}>Try the API routes (returns 401 JSON when unauthenticated):</p>
-            <div className="actions">
-              <a href="/api/me" className="btn btn-secondary">GET /api/me</a>
-              <a href="/api/session" className="btn btn-secondary">GET /api/session</a>
-              <a href="/api/token" className="btn btn-secondary">GET /api/token</a>
-            </div>
-          </div>
-        )}
       </main>
     </>
   )

@@ -8,11 +8,23 @@ function formatDate(epochSeconds?: number) {
   return new Date(epochSeconds * 1000).toLocaleString()
 }
 
+function tokenStatus(expiresAt?: number): { label: string; cls: string } {
+  if (!expiresAt) return { label: 'Unknown', cls: 'expiring' }
+  const secsLeft = expiresAt - Math.floor(Date.now() / 1000)
+  if (secsLeft <= 0) return { label: 'Expired', cls: 'expired' }
+  if (secsLeft < 300) {
+    const m = Math.floor(secsLeft / 60), s = secsLeft % 60
+    return { label: `Expiring · ${m}m ${s}s`, cls: 'expiring' }
+  }
+  const m = Math.floor(secsLeft / 60)
+  return { label: `Valid · ${m}m remaining`, cls: 'valid' }
+}
+
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="stat-card">
       <p className="stat-label">{label}</p>
-      <p className="stat-value">{value}</p>
+      <p className="stat-value" title={value}>{value}</p>
     </div>
   )
 }
@@ -20,44 +32,53 @@ function StatCard({ label, value }: { label: string; value: string }) {
 export function DashboardPage({ user, session }: DashboardPageProps) {
   const tokenSets = session.tokenSets ?? []
   const primaryToken = tokenSets[0]
+  const status = tokenStatus(primaryToken?.expiresAt)
 
   return (
     <>
       <Nav user={user} />
       <main>
-        <div className="page-header">
-          <h1>Session Dashboard</h1>
-          <div className="actions">
-            <a href="/profile" className="btn btn-secondary">Profile</a>
-            <a href="/api/session" className="btn btn-secondary">Raw JSON</a>
-            <a href="/" className="btn btn-secondary">Home</a>
-            <a href="/auth/logout" className="btn btn-danger">Logout</a>
+        <div className="page-banner">
+          <div>
+            <h1>Session Dashboard</h1>
+            <p className="banner-sub">Session metadata and token state for the current login.</p>
           </div>
+          <a href="/api/session" className="btn btn-secondary">Raw JSON</a>
         </div>
 
         <div className="grid">
-          <StatCard label="Subject (sub)" value={user.sub} />
+          <StatCard label="Subject" value={user.sub} />
           <StatCard label="Token sets" value={String(tokenSets.length)} />
-          <StatCard label="Has refresh token" value={session.refreshToken ? 'Yes' : 'No'} />
-          <StatCard label="Token expires" value={formatDate(primaryToken?.expiresAt)} />
+          <StatCard label="Refresh token" value={session.refreshToken ? 'Present' : 'None'} />
+          <StatCard label="Expires" value={formatDate(primaryToken?.expiresAt)} />
         </div>
 
         {primaryToken && (
           <>
-            <h2>Primary Token Set</h2>
-            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+            <h2>Primary Token</h2>
+            <div className="card card-table">
               <table>
                 <thead><tr><th>Field</th><th>Value</th></tr></thead>
                 <tbody>
-                  <tr><td>Expires at</td><td><code>{formatDate(primaryToken.expiresAt)}</code></td></tr>
-                  <tr><td>Scope</td><td><code>{String(primaryToken.scope ?? 'N/A')}</code></td></tr>
+                  <tr>
+                    <td>Status</td>
+                    <td><span className={`token-badge ${status.cls}`}>{status.label}</span></td>
+                  </tr>
+                  <tr>
+                    <td>Expires at</td>
+                    <td><code>{formatDate(primaryToken.expiresAt)}</code></td>
+                  </tr>
+                  <tr>
+                    <td>Scope</td>
+                    <td><code>{String(primaryToken.scope ?? 'N/A')}</code></td>
+                  </tr>
                   <tr>
                     <td>Access token</td>
                     <td>
-                      <code>{primaryToken.accessToken
-                        ? `${String(primaryToken.accessToken).slice(0, 24)}…`
-                        : 'N/A'}
-                      </code>
+                      <code>{primaryToken.accessToken ? `${String(primaryToken.accessToken).slice(0, 32)}…` : 'N/A'}</code>
+                      {primaryToken.accessToken && (
+                        <button className="btn-copy" data-copy={String(primaryToken.accessToken)}>Copy</button>
+                      )}
                     </td>
                   </tr>
                 </tbody>
@@ -66,7 +87,7 @@ export function DashboardPage({ user, session }: DashboardPageProps) {
           </>
         )}
 
-        <h2>Full Session (JSON)</h2>
+        <h2>Full Session</h2>
         <pre>{JSON.stringify(session, null, 2)}</pre>
       </main>
     </>
